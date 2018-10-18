@@ -6,7 +6,7 @@ import Framework from './framework'
 var listener = new THREE.AudioListener();
 var audioLoader = new THREE.AudioLoader();
 
-var order = [];
+var order = new Array();
 // order[40] is middle C on piano
 var index = 40; 
 var length = 84;
@@ -14,38 +14,13 @@ var firstStep = true;
 var startTime = Date.now();
 var direction = 1;
 // time interval between keys, in milliseconds
-var timeInterval = 1000; 
+var timeInterval = 50; 
 var notes = ['Ab', 'A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G'];
-
-
-var audioInitialized = new Promise((resolve, reject) => 
-{ 
-    for (var i = 0; i < length; i++)
-    {
-      order[i] = new THREE.Audio(listener);
-    }
-
-    setTimeout(function() {
-      resolve();
-    }, 5000);
-}); 
-
-/*
-var audioLoaded = new Promise((resolve, reject) => 
-{ 
-    for (var i = 0; i < length; i++)
-    {
-      audioLoader.load( './sounds/piano/' + notes[i % 12] + (Math.floor(i / 12) + 1) + '.mp3', function( buffer ) {
-        order[i].setBuffer( buffer );
-        order[i].setVolume(1.0);
-        resolve(order[i]);
-      });
-    }
-}); 
-*/
+var pianoLoadCount = 0;
 
 // called after the scene loads
-function onLoad(framework) {
+function onLoad(framework) 
+{
   var scene = framework.scene;
   var camera = framework.camera;
   var renderer = framework.renderer;
@@ -53,31 +28,29 @@ function onLoad(framework) {
   //var stats = framework.stats;
   var controls = framework.controls;
 
-  /*
+  // load all the piano key mp3 files
   for (var i = 0; i < length; i++)
   {
-    order[i] = new THREE.Audio(listener);
-  }
+    // why we have to use a try catch statement for loading, or else i becomes length - 1 for all
+    // https://dzone.com/articles/why-does-javascript-loop-only-use-last-value
+    try { throw i }
+    catch (key) 
+    {
+        setTimeout(function()
+        {
+            audioLoader.load( './sounds/piano/' + notes[key % 12] + (Math.floor(key / 12) + 1) + '.mp3', function( buffer ) 
+            {
+              order[key] = new THREE.Audio(listener);
+              order[key].name = notes[key % 12] + (Math.floor(key / 12) + 1);
+              order[key].setBuffer( buffer );
+              order[key].setVolume(1.0);
+              pianoLoadCount++;
+            });
 
-  for (var i = 0; i < length; i++)
-  {
-    audioLoader.load( './sounds/piano/' + notes[i % 12] + i + '.mp3', function( buffer ) {
-      order[i].setBuffer( buffer );
-      order[i].setVolume(1.0);
-    });
-  }
-  */
+        }, 1000);
+    }
 
-  Promise.all([audioInitialized]).then(values => 
-  {  
-      for (var i = 0; i < length; i++)
-      {
-        audioLoader.load( './sounds/piano/' + notes[i % 12] + (Math.floor(i / 12) + 1) + '.mp3', function( buffer ) {
-          order[i].setBuffer( buffer );
-          order[i].setVolume(1.0);
-        });
-      }
-  });
+  }
 
 }
 
@@ -88,14 +61,32 @@ function onUpdate(framework)
 
   if (Math.abs(Date.now() - startTime) >= timeInterval)
   {
-    order[index].play();
-
-    startTime = Date.now();
-    if (index < length)
+    console.log("index: " + index);
+    if (pianoLoadCount >= length)
     {
-      index = index + 1;
+      if (order[index] != undefined)
+      {
+        console.log(order[index].name);
+        if (index + 7 < length)
+        {
+          if (order[index].isPlaying)
+          {
+            order[index].stop();
+          }
+          order[index].play();
+          //order[index + 4].play();
+          //order[index + 7].play();
+        }
+      }
+
+      if (index < length)
+      {
+        index = index + 1 * direction;
+        direction = direction * -1;
+      }
     }
 
+    startTime = Date.now();
   }
 
 }
