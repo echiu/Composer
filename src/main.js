@@ -21,12 +21,65 @@ var timeInterval = 500;
 var notes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 var pianoLoadCount = 0;
 
-var ionian =  [2, 2, 1, 2, 2, 2, 1];
-var dorian =  [2, 1, 2, 2, 2, 1, 2];
-var aeolian = [2, 1, 2, 2, 2, 1, 2];
 
+// modes
+// ionian[0] = 2 means it takes 2 half steps to get from 1st to 2nd note
+// ionian[2] = 1 means it takes 1 half step to get from 3rd to 4th note
+var ionian =     [2, 2, 1, 2, 2, 2, 1];
+var dorian =     [2, 1, 2, 2, 2, 1, 2];
+var phygian =    [1, 2, 2, 2, 1, 2, 2];
+var lydian =     [2, 2, 2, 1, 2, 2, 1];
+var mixolydian = [2, 2, 1, 2, 2, 1, 2];
+var aeolian =    [2, 1, 2, 2, 2, 1, 2];
+var locrian =    [2, 1, 2, 1, 2, 2, 2];
 
+var mode = ionian;
+var modeIndex = 0;
 
+// keeps track of which notes to play next
+var notesQueue = [];
+// keeps track of number of notes to play at once next
+var countQueue = [];
+
+function generateNotes()
+{
+  // step one is to choose the mode
+  var random = Math.floor(Math.random() * 2);
+  switch (random) {
+    case 0: 
+      mode = ionian;
+      break;
+    case 1:
+      mode = aeolian;
+      break;
+    default:
+      mode = ionian;
+  }
+
+  random = Math.floor(Math.random() * 2);
+
+  if (random == 0 && index + mode[0] + mode[1] + mode[2] + mode[3] < length)
+  {
+    notesQueue.push(index);
+    notesQueue.push(index + mode[0] + mode[1]);
+    notesQueue.push(index + mode[0] + mode[1] + mode[2] + mode[3]);
+    countQueue.push(1);
+    countQueue.push(1);
+    countQueue.push(1);
+    index = index + mode[0] + mode[1] + mode[2] + mode[3];
+  }
+  else if (random == 1 && index - mode[3] - mode[2] - mode[1] - mode[0] >= 0)
+  {
+    notesQueue.push(index);
+    notesQueue.push(index - mode[3] - mode[2]);
+    notesQueue.push(index - mode[3] - mode[2] - mode[1] - mode[0]);
+    countQueue.push(1);
+    countQueue.push(1);
+    countQueue.push(1);
+    index = index - mode[3] - mode[2] - mode[1] - mode[0];
+  }
+
+}
 
 // called after the scene loads
 function onLoad(framework) 
@@ -68,29 +121,23 @@ function onLoad(framework)
 // called on frame updates
 function onUpdate(framework) 
 {
-  // play key every time interval
-  if (Math.abs(Date.now() - startTime) >= timeInterval)
+  // play notes next on notesQueue every time interval
+  // double check all piano sounds loaded
+  if (Math.abs(Date.now() - startTime) >= timeInterval && pianoLoadCount >= length)
   {
 
-    console.log("index: " + index);
-
-    if (pianoLoadCount >= length && order[index] != undefined)
+    var count = countQueue.shift();
+    for (var i = 0; i < count; i++)
     {
+      var noteIndex = notesQueue.shift();
+      // if the note is still playing, stop and play it again
+      if (order[noteIndex].isPlaying) { order[noteIndex].stop(); }
+      order[noteIndex].play();
+    }
 
-        console.log(order[index].name);
-
-      if (index + 7 < length)
-      {
-        if (order[index].isPlaying) { order[index].stop(); }
-        order[index].play();
-        //order[index + 4].play();
-        //order[index + 7].play();
-      }
-      
-      if (index < length)
-      {
-        index = index + 1 * direction;
-      }
+    if (notesQueue.length < 100)
+    {
+      generateNotes();
     }
 
     startTime = Date.now();
