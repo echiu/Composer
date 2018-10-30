@@ -13,18 +13,24 @@ var length = 84;
 var firstStep = true;
 var startTime = Date.now();
 var direction = 1;
-// time interval between keys, in milliseconds
-var timeInterval = 500; 
+// time interval between notes, in milliseconds
+var timeInterval = 1000; 
+
 // see image of electronic keyboard to understand indexing:
 // https://images-na.ssl-images-amazon.com/images/I/81uw9BUrzTL._SL1500_.jpg
 // A0, Bb0, B0, C1, Db1, D1, ... Bb7, B7, C8
 var notes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 var pianoLoadCount = 0;
 
+// keeps track of which notes to play next
+var notesQueue = [];
+// keeps track of number of notes to play at once next
+var countQueue = [];
 
 // modes
+// ionian is typical major scale, aeolian is typical minor scale
 // ionian[0] = 2 means it takes 2 half steps to get from 1st to 2nd note
-// ionian[2] = 1 means it takes 1 half step to get from 3rd to 4th note
+// ionian[2] = 1 means it takes 1 half steps to get from 3rd to 4th note
 var ionian =     [2, 2, 1, 2, 2, 2, 1];
 var dorian =     [2, 1, 2, 2, 2, 1, 2];
 var phygian =    [1, 2, 2, 2, 1, 2, 2];
@@ -32,40 +38,39 @@ var lydian =     [2, 2, 2, 1, 2, 2, 1];
 var mixolydian = [2, 2, 1, 2, 2, 1, 2];
 var aeolian =    [2, 1, 2, 2, 2, 1, 2];
 var locrian =    [2, 1, 2, 1, 2, 2, 2];
+var modes = [ionian, dorian, phygian, lydian, mixolydian, aeolian, locrian];
 
-var mode = ionian;
-var modeIndex = 0;
+// probabilities of chord progressions
+// progressions[0][0] means there is a 0.10 chance to get from I to I
+// progressions[4][0] means there is a 0.95 chance ot get from V to I
+var progressions = [
+  [0.10, 0.05, 0.05, 0.50, 0.20, 0.05, 0.05],
+  [0.00, 0.00, 0.00, 0.00, 0.90, 0.00, 0.10],
+  [0.00, 0.00, 0.00, 0.20, 0.00, 0.80, 0.00],
+  [0.00, 0.05, 0.00, 0.00, 0.90, 0.00, 0.05],
+  [0.95, 0.00, 0.00, 0.00, 0.00, 0.05, 0.00],
+  [0.00, 0.75, 0.00, 0.20, 0.05, 0.00, 0.00],
+  [0.70, 0.00, 0.00, 0.00, 0.30, 0.00, 0.00]];
 
-// keeps track of which notes to play next
-var notesQueue = [];
-// keeps track of number of notes to play at once next
-var countQueue = [];
-
+// generates notes for one KEY, for a random number of measures
+// then passes it on to another KEY
 function generateNotes()
 {
-  // step one is to choose the mode
-  var random = Math.floor(Math.random() * 2);
-  switch (random) {
-    case 0: 
-      mode = ionian;
-      break;
-    case 1:
-      mode = aeolian;
-      break;
-    default:
-      mode = ionian;
-  }
+  // step one is to randomly choose the mode
+  var random = Math.floor(Math.random() * modes.length);
+  var currMode = modes[random];
 
+  // step two is to play chords in mode
   random = Math.floor(Math.random() * 2);
-
   if (random == 0 && index + mode[0] + mode[1] + mode[2] + mode[3] < length)
   {
     notesQueue.push(index);
     notesQueue.push(index + mode[0] + mode[1]);
     notesQueue.push(index + mode[0] + mode[1] + mode[2] + mode[3]);
-    countQueue.push(1);
-    countQueue.push(1);
-    countQueue.push(1);
+    countQueue.push(3);
+    //countQueue.push(1);
+    //countQueue.push(1);
+    //countQueue.push(1);
     index = index + mode[0] + mode[1] + mode[2] + mode[3];
   }
   else if (random == 1 && index - mode[3] - mode[2] - mode[1] - mode[0] >= 0)
@@ -73,12 +78,12 @@ function generateNotes()
     notesQueue.push(index);
     notesQueue.push(index - mode[3] - mode[2]);
     notesQueue.push(index - mode[3] - mode[2] - mode[1] - mode[0]);
-    countQueue.push(1);
-    countQueue.push(1);
-    countQueue.push(1);
+    countQueue.push(3);
+    //countQueue.push(1);
+    //countQueue.push(1);
+    //countQueue.push(1);
     index = index - mode[3] - mode[2] - mode[1] - mode[0];
   }
-
 }
 
 // called after the scene loads
@@ -91,23 +96,23 @@ function onLoad(framework)
   //var gui = framework.gui;
   //var stats = framework.stats;
 
-  // load all the piano key mp3 files
+  // load all the piano note mp3 files
   for (var i = 0; i < length; i++)
   {
     // why we have to use a try catch statement for loading, or else i = (length - 1) for all
     // https://dzone.com/articles/why-does-javascript-loop-only-use-last-value
     try { throw i }
-    catch (key) 
+    catch (note) 
     {
       setTimeout(function()
       {
         // we are skipping A0, Bb0, B0, and C8
-        audioLoader.load( './sounds/piano/' + notes[key % 12] + (Math.floor(key / 12) + 1) + '.mp3', function( buffer ) 
+        audioLoader.load( './sounds/piano/' + notes[note % 12] + (Math.floor(note / 12) + 1) + '.mp3', function( buffer ) 
         {
-          order[key] = new THREE.Audio(listener);
-          order[key].name = notes[key % 12] + (Math.floor(key / 12) + 1);
-          order[key].setBuffer( buffer );
-          order[key].setVolume(1.0);
+          order[note] = new THREE.Audio(listener);
+          order[note].name = notes[note % 12] + (Math.floor(note / 12) + 1);
+          order[note].setBuffer( buffer );
+          order[note].setVolume(1.0);
           pianoLoadCount++;
         });
 
@@ -125,8 +130,9 @@ function onUpdate(framework)
   // double check all piano sounds loaded
   if (Math.abs(Date.now() - startTime) >= timeInterval && pianoLoadCount >= length)
   {
-
+    // get the number of notes to play for this onUpdate step
     var count = countQueue.shift();
+
     for (var i = 0; i < count; i++)
     {
       var noteIndex = notesQueue.shift();
@@ -144,7 +150,6 @@ function onUpdate(framework)
   }
 
 }
-
 
 // when the scene is done initializing, it will call onLoad, then on frame updates, call onUpdate
 Framework.init(onLoad, onUpdate);
