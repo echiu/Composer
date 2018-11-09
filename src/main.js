@@ -23,19 +23,27 @@ var timeInterval = 1000;
 var notes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 var pianoLoadCount = 0;
 
-var state = new State(40, 1, 0, 84);
+var state = new State(40, 0, 0, 84);
 // keeps track of which notes to play next
 var notesQueue = [];
 // keeps track of number of notes to play at once next
 var countQueue = [];
 
-
 // generates notes for one KEY, for a random number of measures
 // then passes it on to another KEY
 function generateMelody()
 {
+  var output;
+  if (state.degree == 0 && Math.random() < 0.5)
+  {
+    output = state.doModulation();
+  } 
+  else
+  {
+    output = state.doProgression();
+  }
 
-  var output = state.doProgression();
+  // transfer data to queues
   for (var i = 0; i < output[0].length; i++)
   {
     notesQueue.push(output[0][i]);
