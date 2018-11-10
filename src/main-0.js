@@ -821,6 +821,7 @@ function onUpdate(framework) {
   {
     order[index].play();
     
+    /*
     // to play a major every time
     if (index + 4 < length) {
       order[index + 4].play();
@@ -829,7 +830,7 @@ function onUpdate(framework) {
     {
       order[index + 7].play();
     }
-    
+    */
 
     timeInterval = Math.floor(Math.random() * 2000) + 500;
 

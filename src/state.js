@@ -104,9 +104,11 @@ export default class State
     {
         // generates a number from 1 to 11
         var offset = Math.ceil(11.0 * Math.random());
-        var signSeed = Math.random();
+        var seed = Math.random();
+        var leftProbability = this.root / this.numKeys;
         var sign;
-        if (sign < 0.5) { sign = -1; } else { sign = 1; }
+        if (seed <= leftProbability) { sign = -1; } else { sign = 1; }
+        
         var newRoot;
         if (this.root + offset >= this.numKeys) {
             newRoot = this.root - offset;
@@ -123,6 +125,7 @@ export default class State
         console.log("doing modulation");
         console.log("oldRoot: " + this.root);
         console.log("oldMode: " + this.mode);
+        console.log("sign " + sign);
         console.log("newRoot: " + newRoot);
         console.log("newMode: " + newMode);
 

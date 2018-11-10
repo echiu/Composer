@@ -34,70 +34,20 @@ var countQueue = [];
 function generateMelody()
 {
   var output;
-  if (state.degree == 0 && Math.random() < 0.5)
-  {
+  if (state.degree == 0 && Math.random() < 0.5) {
     output = state.doModulation();
   } 
-  else
-  {
+  else {
     output = state.doProgression();
   }
 
   // transfer data to queues
-  for (var i = 0; i < output[0].length; i++)
-  {
+  for (var i = 0; i < output[0].length; i++) {
     notesQueue.push(output[0][i]);
   }
-  for (var i = 0; i < output[1].length; i++)
-  {
+  for (var i = 0; i < output[1].length; i++) {
     countQueue.push(output[1][i]);
   }
-
-  /*
-  // step one is to randomly choose the mode
-  var random = Math.floor(Math.random() * modes.length);
-  var currMode = modes[random];
-
-  // step two is to play chords in mode
-  random = Math.floor(Math.random() * 2);
-  var isArpeggio = Math.floor(Math.random() * 2);
-  if (random == 0 && index + currMode[0] + currMode[1] + currMode[2] + currMode[3] < length)
-  {
-    notesQueue.push(index);
-    notesQueue.push(index + currMode[0] + currMode[1]);
-    notesQueue.push(index + currMode[0] + currMode[1] + currMode[2] + currMode[3]);
-    if (isArpeggio)
-    {
-      countQueue.push(1);
-      countQueue.push(1);
-      countQueue.push(1);
-    }
-    else
-    {
-      countQueue.push(3);
-    }
-
-    index = index + currMode[0] + currMode[1] + currMode[2] + currMode[3];
-  }
-  else if (random == 1 && index - currMode[3] - currMode[2] - currMode[1] - currMode[0] >= 0)
-  {
-    notesQueue.push(index);
-    notesQueue.push(index - currMode[3] - currMode[2]);
-    notesQueue.push(index - currMode[3] - currMode[2] - currMode[1] - currMode[0]);
-    if (isArpeggio)
-    {
-      countQueue.push(1);
-      countQueue.push(1);
-      countQueue.push(1);
-    }
-    else
-    {
-      countQueue.push(3);
-    }
-    index = index - currMode[3] - currMode[2] - currMode[1] - currMode[0];
-  }
-  */
-
 }
 
 // called after the scene loads
