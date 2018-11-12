@@ -1,5 +1,7 @@
+
 export default class State 
 {
+
     constructor(root, mode, degree, numKeys)
     {
         // modes
@@ -110,15 +112,9 @@ export default class State
         if (seed <= leftProbability) { sign = -1; } else { sign = 1; }
         
         var newRoot;
-        if (this.root + offset >= this.numKeys) {
-            newRoot = this.root - offset;
-        }
-        else if (this.root - offset < 0) {
-            newRoot = this.root + offset;
-        }
-        else {
-            newRoot = this.root + sign * offset;
-        }
+        if (this.root + offset >= this.numKeys) { newRoot = this.root - offset; }
+        else if (this.root - offset < 0) { newRoot = this.root + offset; }
+        else { newRoot = this.root + sign * offset; }
         var newMode = Math.floor(Math.random() * this.modes.length);
 
         console.log(" ");
@@ -136,12 +132,14 @@ export default class State
         var oldAltered = [];
         var newAltered = [];
         var oldStartNote = this.root;
+        // iterate through the old mode
         for (var i = 0; i < this.modes[this.mode].length; i++)
         {
             var oldNote1 = oldStartNote;
             var oldNote2 = oldStartNote + this.modes[this.mode][i] + this.modes[this.mode][i + 1];
             var oldNote3 = oldNote2 + this.modes[this.mode][i + 2] + this.modes[this.mode][i + 3];
 
+            // iterate through the new mode
             var newStartNote = newRoot;
             for (var j = 0; j < this.modes[newMode].length; j++)
             {
@@ -154,12 +152,13 @@ export default class State
                 var diffNote2 = Math.abs((newNote2 % 12) - (oldNote2 % 12));
                 var diffNote3 = Math.abs((newNote3 % 12) - (oldNote3 % 12));
 
-                // chords have no difference
+                // chords that have no difference are added to diatonic list
                 if (diffNote1 + diffNote2 + diffNote3 == 0)
                 {
                     diatonic.push([newNote1, newNote2, newNote3, j]);
                 }
-                // chords have half step difference, but base note must be same
+                // chords that have half step difference, but base note must be same
+                // are added to altered list
                 else if (diffNote1 == 0 && diffNote2 + diffNote3 == 1.0)
                 {
                     oldAltered.push([oldNote1, oldNote2, oldNote3, j]);
@@ -182,71 +181,32 @@ export default class State
             return this.doProgression();
         }
 
-        var outputNotes = [];
-        var outputCount = [];
         // play old altered first
         // play diatonic in the middle
         // play new altered last
-        for (var i = 0; i < oldAltered.length; i++)
+        var commonChords = [oldAltered, diatonic, newAltered];
+        var outputNotes = [];
+        var outputCount = [];
+        for (var h = 0; h < commonChords.length; h++)
         {
-            console.log("old altered " + oldAltered[i][0] + " " + oldAltered[i][1] + " " + oldAltered[i][2]);
-            // outputNotes.push(oldAltered[i][0]);
-            // outputNotes.push(oldAltered[i][1]);
-            // outputNotes.push(oldAltered[i][2]);
-            // outputCount.push(3);
-            var inversion = this.doInversion(oldAltered[i][0], oldAltered[i][1], oldAltered[i][2], this.root);
-            for (var j = 0; j < inversion.length; j++)
+            for (var i = 0; i < commonChords[h].length; i++)
             {
-                outputNotes.push(inversion[j]);
-            }
-            var arpeggio = this.doArpeggio(inversion.length);
-            for (var j = 0; j < arpeggio.length; j++)
-            {
-                outputCount.push(arpeggio[j]);
-            }
+                console.log("common chords " + commonChords[h][i][0] + " " + commonChords[h][i][1] + " " + commonChords[h][i][2]);
 
-            this.degree = oldAltered[i][3];
+                // play notes as inversion
+                var inversion = this.doInversion(commonChords[h][i][0], 
+                                                 commonChords[h][i][1], 
+                                                 commonChords[h][i][2], 
+                                                 this.root);
+                for (var j = 0; j < inversion.length; j++) { outputNotes.push(inversion[j]); }
+                // play notes in arpeggio
+                var arpeggio = this.doArpeggio(inversion.length);
+                for (var j = 0; j < arpeggio.length; j++) { outputCount.push(arpeggio[j]); }
+                // update degree for future progressions
+                this.degree = commonChords[h][i][3];
+            }
         }
-        for (var i = 0; i < diatonic.length; i++)
-        {
-            console.log("diatonic " + diatonic[i][0] + " " + diatonic[i][1] + " " + diatonic[i][2]);
-            // outputNotes.push(diatonic[i][0]);
-            // outputNotes.push(diatonic[i][1]);
-            // outputNotes.push(diatonic[i][2]);
-            // outputCount.push(3);
-            var inversion = this.doInversion(diatonic[i][0], diatonic[i][1], diatonic[i][2], newRoot);
-            for (var j = 0; j < inversion.length; j++)
-            {
-                outputNotes.push(inversion[j]);
-            }
-            var arpeggio = this.doArpeggio(inversion.length);
-            for (var j = 0; j < arpeggio.length; j++)
-            {
-                outputCount.push(arpeggio[j]);
-            }
 
-            this.degree = diatonic[i][3];
-        }
-        for (var i = 0; i < newAltered.length; i++)
-        {
-            console.log("new altered " + newAltered[i][0] + " " + newAltered[i][1] + " " + newAltered[i][2]);
-            // outputNotes.push(newAltered[i][0]);
-            // outputNotes.push(newAltered[i][1]);
-            // outputNotes.push(newAltered[i][2]);
-            // outputCount.push(3);
-            var inversion = this.doInversion(newAltered[i][0], newAltered[i][1], newAltered[i][2], newRoot);
-            for (var j = 0; j < inversion.length; j++)
-            {
-                outputNotes.push(inversion[j]);
-            }
-            var arpeggio = this.doArpeggio(inversion.length);
-            for (var j = 0; j < arpeggio.length; j++)
-            {
-                outputCount.push(arpeggio[j]);
-            }
-            
-            this.degree = newAltered[i][3];
-        }
         console.log(" ");
 
         // update
@@ -262,22 +222,13 @@ export default class State
     {
         var normalizedList = list;
         var magnitude = 0.0;
-
-        for (var i = 0; i < list.length; i++)
-        {
-            magnitude += list[i];
-        }
-
-        for (var i = 0; i < normalizedList.length; i++)
-        {
-            normalizedList[i] /= magnitude;
-        }
-
+        for (var i = 0; i < list.length; i++) { magnitude += list[i]; }
+        for (var i = 0; i < normalizedList.length; i++) { normalizedList[i] /= magnitude; }
         return normalizedList;
     }
 
 
-    doInversion(note1, note2, note3, mean)
+    doInversion(note1, note2, note3, hand)
     {
         var baseNote1 = note1 % 12;
         var baseNote2 = note2 % 12;
@@ -302,17 +253,17 @@ export default class State
 
         // calculates the gaussian distribution weighting
         // one distribution has center of list as highest weight
-        // another distribution has mean as highest weight
-        // this skews to play notes near the center and mean
+        // another distribution has hand as highest weight
+        // this skews to play notes near the center and hand
         // https://en.wikipedia.org/wiki/Gaussian_function
         // solve for variance
         // https://en.wikipedia.org/wiki/Normal_distribution#/media/File:Empirical_Rule.PNG
         for (var i = 0 ; i < possibleNotes.length; i++)
         {
-            // gaussian for notes near mean
+            // gaussian for notes near hand
             var amplitude = 1.0;
             var variance2 = 6 * 6;
-            var x2 = (possibleNotes[i] - mean) * (possibleNotes[i] - mean);
+            var x2 = (possibleNotes[i] - hand) * (possibleNotes[i] - hand);
             var noteProbability = amplitude * Math.pow(2.71828, -0.5 * x2 / variance2);
             probabilities[i] = noteProbability;
 
@@ -343,7 +294,6 @@ export default class State
                     break; 
                 }
             }
-
             countNotes++;
         }
 
@@ -356,8 +306,7 @@ export default class State
     {
         var outputCount = [];
         var countNotes = 0;
-        while (countNotes < numNotes)
-        {
+        while (countNotes < numNotes) {
             var seed = Math.ceil((numNotes - countNotes) * Math.random());
             outputCount.push(seed);
             countNotes += seed;

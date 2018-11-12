@@ -34,20 +34,11 @@ var countQueue = [];
 function generateMelody()
 {
   var output;
-  if (state.degree == 0 && Math.random() < 0.5) {
-    output = state.doModulation();
-  } 
-  else {
-    output = state.doProgression();
-  }
-
+  if (state.degree == 0 && Math.random() < 0.5) { output = state.doModulation(); } 
+  else { output = state.doProgression(); }
   // transfer data to queues
-  for (var i = 0; i < output[0].length; i++) {
-    notesQueue.push(output[0][i]);
-  }
-  for (var i = 0; i < output[1].length; i++) {
-    countQueue.push(output[1][i]);
-  }
+  for (var i = 0; i < output[0].length; i++) { notesQueue.push(output[0][i]); }
+  for (var i = 0; i < output[1].length; i++) { countQueue.push(output[1][i]); }
 }
 
 // called after the scene loads
@@ -82,7 +73,6 @@ function onLoad(framework)
 
       }, 1000);
     }
-
   }
 
 }
@@ -105,10 +95,7 @@ function onUpdate(framework)
       order[noteIndex].play();
     }
 
-    if (notesQueue.length < 100)
-    {
-      generateMelody();
-    }
+    if (notesQueue.length < 100) { generateMelody(); }
 
     startTime = Date.now();
   }
