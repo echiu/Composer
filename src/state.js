@@ -105,16 +105,17 @@ export default class State
     doModulation()
     {
         // generates a number from 1 to 11
+        // takes 12 half steps to jump one octave, this ensures a new key
         var offset = Math.ceil(11.0 * Math.random());
         var seed = Math.random();
         var leftProbability = this.root / this.numKeys;
         var sign;
         if (seed <= leftProbability) { sign = -1; } else { sign = 1; }
         
-        var newRoot;
-        if (this.root + offset >= this.numKeys) { newRoot = this.root - offset; }
-        else if (this.root - offset < 0) { newRoot = this.root + offset; }
-        else { newRoot = this.root + sign * offset; }
+        var newRoot = this.root + sign * offset;
+        //if (this.root + offset >= this.numKeys) { newRoot = this.root - offset; }
+        //else if (this.root - offset < 0) { newRoot = this.root + offset; }
+        //else { newRoot = this.root + sign * offset; }
         var newMode = Math.floor(Math.random() * this.modes.length);
 
         console.log(" ");
@@ -249,11 +250,9 @@ export default class State
             baseNote3 += 12;
         }
 
-        // console.log("possible notes " + possibleNotes);
-
         // calculates the gaussian distribution weighting
         // one distribution has center of list as highest weight
-        // another distribution has hand as highest weight
+        // another distribution has hand location as highest weight
         // this skews to play notes near the center and hand
         // https://en.wikipedia.org/wiki/Gaussian_function
         // solve for variance
@@ -261,21 +260,22 @@ export default class State
         for (var i = 0 ; i < possibleNotes.length; i++)
         {
             // gaussian for notes near hand
-            var amplitude = 1.0;
-            var variance2 = 6 * 6;
+            var amplitude = 0.5;
+            var variance2 = (12.0 / 3.0) * (12.0 / 3.0);
             var x2 = (possibleNotes[i] - hand) * (possibleNotes[i] - hand);
             var noteProbability = amplitude * Math.pow(2.71828, -0.5 * x2 / variance2);
             probabilities[i] = noteProbability;
 
             // gaussian for notes near center of list
             amplitude = 1.0;
-            variance2 = (this.numKeys / 2.0 / 3.0) * (this.numKeys / 2.0 / 3.0);
-            x2 = Math.floor(this.numKeys / 2.0) * Math.floor(this.numKeys / 2.0);
+            // (center - 3.0 * variance) to (center + 3.0 * variance) covers 99.7% of the distribution
+            variance2 = ((possibleNotes.length / 2.0) / 3.0) * ((possibleNotes.length / 2.0) / 3.0);
+            x2 = (i - (possibleNotes.length / 2.0)) * (i - (possibleNotes.length / 2.0));
             noteProbability = amplitude * Math.pow(2.71828, -0.5 * x2 / variance2)
             probabilities[i] += noteProbability;
         }
 
-        // console.log("probabilities " + probabilities);
+        //console.log("probabilities " + this.normalizeDistribution(probabilities));
         
         var output = [];
         var numNotes = Math.round(4 * Math.random() + 2);

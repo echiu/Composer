@@ -7,11 +7,12 @@ import State from './state.js'
 var listener = new THREE.AudioListener();
 var audioLoader = new THREE.AudioLoader();
 
-var order = new Array();
-// index = 40, in other words, order[40] is middle C on piano
+var instruments = new Array();
+var instrumentNames = ['piano', 'cello', 'french-horn'];
+
+// index = 40, in other words, instruments[X][40] is middle C
 var index = 40; 
 var length = 84;
-var firstStep = true;
 var startTime = Date.now();
 var direction = 1;
 // time interval between notes, in milliseconds
@@ -51,25 +52,41 @@ function onLoad(framework)
   //var gui = framework.gui;
   //var stats = framework.stats;
 
-  // load all the piano note mp3 files
-  for (var i = 0; i < length; i++)
+
+  for (var j = 0; j < instrumentNames.length; j++)
   {
-    // why we have to use a try catch statement for loading, or else i = (length - 1) for all
-    // https://dzone.com/articles/why-does-javascript-loop-only-use-last-value
-    try { throw i }
-    catch (note) 
+    try { throw j }
+    catch (instrument)
     {
       setTimeout(function()
       {
-        // we are skipping A0, Bb0, B0, and C8
-        audioLoader.load( './sounds/piano/' + notes[note % 12] + (Math.floor(note / 12) + 1) + '.mp3', function( buffer ) 
+        instruments[instrument] = new Array();
+
+        // load all the piano note mp3 files
+        for (var i = 0; i < length; i++)
         {
-          order[note] = new THREE.Audio(listener);
-          order[note].name = notes[note % 12] + (Math.floor(note / 12) + 1);
-          order[note].setBuffer( buffer );
-          order[note].setVolume(1.0);
-          pianoLoadCount++;
-        });
+          // we have to use a try catch statement for loading, or else i = (length - 1) for all
+          // read more here:
+          // https://dzone.com/articles/why-does-javascript-loop-only-use-last-value
+          try { throw i }
+          catch (note) 
+          {
+            setTimeout(function()
+            {
+
+              // we are skipping A0, Bb0, B0, and C8, Db8
+              audioLoader.load( './sounds/' + instrumentNames[instrument] + '/' + notes[note % 12] + (Math.floor(note / 12) + 1) + '.mp3', function( buffer ) 
+              {
+                instruments[instrument][note] = new THREE.Audio(listener);
+                instruments[instrument][note].name = notes[note % 12] + (Math.floor(note / 12) + 1);
+                instruments[instrument][note].setBuffer( buffer );
+                instruments[instrument][note].setVolume(1.0);
+                pianoLoadCount++;
+              });
+
+            }, 1000);
+          }
+        }
 
       }, 1000);
     }
@@ -82,19 +99,25 @@ function onUpdate(framework)
 {
   // play notes next on notesQueue every time interval
   // double check all piano sounds loaded
-  if (Math.abs(Date.now() - startTime) >= timeInterval && pianoLoadCount >= length)
+  if (Math.abs(Date.now() - startTime) >= timeInterval && pianoLoadCount >= length * instrumentNames.length)
   {
     // get the number of notes to play for this onUpdate step
     var count = countQueue.shift();
 
-    for (var i = 0; i < count; i++)
-    {
-      var noteIndex = notesQueue.shift();
-      // if the note is still playing, stop and play it again
-      if (order[noteIndex].isPlaying) { order[noteIndex].stop(); }
-      order[noteIndex].play();
-    }
+      for (var i = 0; i < count; i++)
+      {
+        var noteIndex = notesQueue.shift();
+        // play same note on all instruments, must be inner loop
+        for (var j = 0; j < instruments.length; j++)
+        {
+          // if the note is still playing, stop and play it again
+          //if (order[noteIndex].isPlaying) { order[noteIndex].stop(); }
+          //order[noteIndex].play();
+          if (!instruments[j][noteIndex].isPlaying) { instruments[j][noteIndex].play(); }
+        }
+      }
 
+    // if number of generated notes is less than 100, generate more notes
     if (notesQueue.length < 100) { generateMelody(); }
 
     startTime = Date.now();
