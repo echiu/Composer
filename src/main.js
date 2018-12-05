@@ -8,27 +8,36 @@ var listener = new THREE.AudioListener();
 var audioLoader = new THREE.AudioLoader();
 
 var instruments = new Array();
-var instrumentNames = ['piano', 'cello', 'french-horn'];
+//var instrumentNames = ['piano', 'cello', 'french-horn'];
+var instrumentNames = ['piano'];
 
 // index = 40, in other words, instruments[X][40] is middle C
 var index = 40; 
 var length = 84;
-var startTime = Date.now();
+var prevTime = Date.now();
 var direction = 1;
+
 // time interval between notes, in milliseconds
-var timeInterval = 1000; 
+var baseTimeInterval = 2000; // time for a whole note
+var currTimeInterval = 2000;
+var timeLerpU = 0.0; //interpolation between rhythm and pure random
 
 // see image of electronic keyboard to understand indexing:
 // https://images-na.ssl-images-amazon.com/images/I/81uw9BUrzTL._SL1500_.jpg
 // A0, Bb0, B0, C1, Db1, D1, ... Bb7, B7, C8
 var notes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-var pianoLoadCount = 0;
+var fileLoadCount = 0;
 
 var state = new State(40, 0, 0, 84);
 // keeps track of which notes to play next
 var notesQueue = [];
 // keeps track of number of notes to play at once next
 var countQueue = [];
+
+function lerp(value0, value1, t)
+{
+  return ((1.0 - t) * value0) + (t * value1);
+}
 
 // generates notes for one KEY, for a random number of measures
 // then passes it on to another KEY
@@ -81,7 +90,7 @@ function onLoad(framework)
                 instruments[instrument][note].name = notes[note % 12] + (Math.floor(note / 12) + 1);
                 instruments[instrument][note].setBuffer( buffer );
                 instruments[instrument][note].setVolume(1.0);
-                pianoLoadCount++;
+                fileLoadCount++;
               });
 
             }, 1000);
@@ -99,7 +108,7 @@ function onUpdate(framework)
 {
   // play notes next on notesQueue every time interval
   // double check all piano sounds loaded
-  if (Math.abs(Date.now() - startTime) >= timeInterval && pianoLoadCount >= length * instrumentNames.length)
+  if (Math.abs(prevTime - Date.now()) >= currTimeInterval && fileLoadCount >= length * instrumentNames.length)
   {
     // get the number of notes to play for this onUpdate step
     var count = countQueue.shift();
@@ -120,7 +129,14 @@ function onUpdate(framework)
     // if number of generated notes is less than 100, generate more notes
     if (notesQueue.length < 100) { generateMelody(); }
 
-    startTime = Date.now();
+    // update time interval
+    prevTime = Date.now();
+    var newTimeInterval = Math.pow(2.0, Math.round(Math.random() * -3.0)) * baseTimeInterval;
+    var randomInterval = 0.125 * baseTimeInterval + (Math.random() * 0.875 * baseTimeInterval);
+    currTimeInterval = lerp(newTimeInterval, randomInterval, timeLerpU);
+    console.log(" ");
+    console.log("currTimeInterval " + currTimeInterval);
+    console.log(" ");
   }
 
 }

@@ -54,6 +54,10 @@ export default class State
         this.degree = degree;
         // number of keys on the piano keyboard
         this.numKeys = numKeys;
+
+        // number of notes played at once
+        this.minNotes = 1;
+        this.maxNotes = 2;
     }
 
 
@@ -261,6 +265,8 @@ export default class State
         {
             // gaussian for notes near hand
             var amplitude = 0.5;
+            // (center - 3.0 * variance) to (center + 3.0 * variance) covers 99.7% of the distribution
+            // 12 half steps in one octave, can move within one octave in both directions
             var variance2 = (12.0 / 3.0) * (12.0 / 3.0);
             var x2 = (possibleNotes[i] - hand) * (possibleNotes[i] - hand);
             var noteProbability = amplitude * Math.pow(2.71828, -0.5 * x2 / variance2);
@@ -278,7 +284,7 @@ export default class State
         //console.log("probabilities " + this.normalizeDistribution(probabilities));
         
         var output = [];
-        var numNotes = Math.round(4 * Math.random() + 2);
+        var numNotes = Math.round((this.maxNotes - this.minNotes) * Math.random() + this.minNotes);
         var countNotes = 0;
         while (countNotes < numNotes)
         {   
