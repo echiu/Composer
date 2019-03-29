@@ -8,8 +8,7 @@ var listener = new THREE.AudioListener();
 var audioLoader = new THREE.AudioLoader();
 
 var instruments = new Array();
-//var instrumentNames = ['piano', 'cello', 'french-horn'];
-var instrumentNames = ['piano'];
+var instrumentNames = ['piano', 'clarinet', 'cello', 'french-horn'];
 
 // index = 40, in other words, instruments[X][40] is middle C
 var index = 40; 
@@ -18,8 +17,8 @@ var prevTime = Date.now();
 var direction = 1;
 
 // time interval between notes, in milliseconds
-var baseTimeInterval = 2000; // time for a whole note
-var currTimeInterval = 2000;
+var baseTimeInterval = 1000; // time for a whole note
+var currTimeInterval = baseTimeInterval;
 var timeLerpU = 0.0; //interpolation between rhythm and pure random
 
 // see image of electronic keyboard to understand indexing:
@@ -120,9 +119,8 @@ function onUpdate(framework)
         for (var j = 0; j < instruments.length; j++)
         {
           // if the note is still playing, stop and play it again
-          //if (order[noteIndex].isPlaying) { order[noteIndex].stop(); }
-          //order[noteIndex].play();
-          if (!instruments[j][noteIndex].isPlaying) { instruments[j][noteIndex].play(); }
+          if (instruments[j][noteIndex].isPlaying) { instruments[j][noteIndex].stop(); }
+          instruments[j][noteIndex].play();
         }
       }
 
@@ -131,12 +129,12 @@ function onUpdate(framework)
 
     // update time interval
     prevTime = Date.now();
-    var newTimeInterval = Math.pow(2.0, Math.round(Math.random() * -3.0)) * baseTimeInterval;
+    var newTimeInterval = Math.pow(2.0, Math.round(Math.random() * -0.0)) * baseTimeInterval;
     var randomInterval = 0.125 * baseTimeInterval + (Math.random() * 0.875 * baseTimeInterval);
     currTimeInterval = lerp(newTimeInterval, randomInterval, timeLerpU);
-    console.log(" ");
-    console.log("currTimeInterval " + currTimeInterval);
-    console.log(" ");
+    // console.log(" ");
+    // console.log("currTimeInterval " + currTimeInterval);
+    // console.log(" ");
   }
 
 }

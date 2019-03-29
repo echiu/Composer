@@ -56,8 +56,8 @@ export default class State
         this.numKeys = numKeys;
 
         // number of notes played at once
-        this.minNotes = 1;
-        this.maxNotes = 2;
+        this.minNotes = 2;
+        this.maxNotes = 6;
     }
 
 
@@ -225,7 +225,7 @@ export default class State
 
     normalizeDistribution(list)
     {
-        var normalizedList = list;
+        var normalizedList = list.slice(0);
         var magnitude = 0.0;
         for (var i = 0; i < list.length; i++) { magnitude += list[i]; }
         for (var i = 0; i < normalizedList.length; i++) { normalizedList[i] /= magnitude; }
@@ -254,6 +254,9 @@ export default class State
             baseNote3 += 12;
         }
 
+        // sort possible notes in numeric order
+        possibleNotes.sort(function(a,b){return a - b})
+
         // calculates the gaussian distribution weighting
         // one distribution has center of list as highest weight
         // another distribution has hand location as highest weight
@@ -264,7 +267,7 @@ export default class State
         for (var i = 0 ; i < possibleNotes.length; i++)
         {
             // gaussian for notes near hand
-            var amplitude = 0.5;
+            var amplitude = 1.0;
             // (center - 3.0 * variance) to (center + 3.0 * variance) covers 99.7% of the distribution
             // 12 half steps in one octave, can move within one octave in both directions
             var variance2 = (12.0 / 3.0) * (12.0 / 3.0);
@@ -273,15 +276,16 @@ export default class State
             probabilities[i] = noteProbability;
 
             // gaussian for notes near center of list
-            amplitude = 1.0;
+            amplitude = 0.5;
             // (center - 3.0 * variance) to (center + 3.0 * variance) covers 99.7% of the distribution
-            variance2 = ((possibleNotes.length / 2.0) / 3.0) * ((possibleNotes.length / 2.0) / 3.0);
+            // subtracting 24 removes octave 1 and 7 from possibility, only piano has sounds, not good alone
+            variance2 = (((possibleNotes.length - 24) / 2.0) / 3.0) * (((possibleNotes.length - 24) / 2.0) / 3.0);
             x2 = (i - (possibleNotes.length / 2.0)) * (i - (possibleNotes.length / 2.0));
             noteProbability = amplitude * Math.pow(2.71828, -0.5 * x2 / variance2)
             probabilities[i] += noteProbability;
         }
 
-        //console.log("probabilities " + this.normalizeDistribution(probabilities));
+        // console.log("probabilities " + this.normalizeDistribution(probabilities));
         
         var output = [];
         var numNotes = Math.round((this.maxNotes - this.minNotes) * Math.random() + this.minNotes);
@@ -303,6 +307,7 @@ export default class State
             countNotes++;
         }
 
+        output.sort(function(){return Math.random() - 0.5})
         console.log("inversion " + output);
         return output;
     }
