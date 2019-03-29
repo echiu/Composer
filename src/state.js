@@ -58,6 +58,14 @@ export default class State
         // number of notes played at once
         this.minNotes = 2;
         this.maxNotes = 6;
+        this.uInversion = 0.0;
+        this.uProgression = 0.0;
+    }
+
+
+    lerp(value0, value1, t)
+    {
+      return ((1.0 - t) * value0) + (t * value1);
     }
 
 
@@ -69,7 +77,7 @@ export default class State
         var sumProbability = 0.0;
         // iterate through the probabilities to figure out new degree
         for (var i = 0; i < progressionOptions.length; i++) {
-            sumProbability += progressionOptions[i];
+            sumProbability += this.lerp(1.0/7.0, progressionOptions[i], this.uProgression);
             if (seed < sumProbability) { 
                 newDegree = i; 
                 break; 
@@ -290,6 +298,27 @@ export default class State
         var output = [];
         var numNotes = Math.round((this.maxNotes - this.minNotes) * Math.random() + this.minNotes);
         var countNotes = 0;
+
+        // ADDING INTERPOLATION PROBABILITY ARRAY HERE
+        //console.log("possible notes " + possibleNotes);
+        var countInOctaveOneOrSeven = 0;
+        for (var i = 0; i < possibleNotes.length; i++) {
+            if (possibleNotes[i] < 12 || possibleNotes[i] > 80-12) {
+                countInOctaveOneOrSeven++;
+            }
+        }
+        var equalProbabilities = [];
+        for (var i = 0; i < possibleNotes.length; i++) {
+            if (possibleNotes[i] < 12 || possibleNotes[i] > 80-12) {
+                equalProbabilities[i] = 0.0;
+            }
+            else
+            {
+                equalProbabilities[i] = 1.0 / (possibleNotes.length - countInOctaveOneOrSeven);
+            }
+        }
+        //console.log(equalProbabilities);
+
         while (countNotes < numNotes)
         {   
             probabilities = this.normalizeDistribution(probabilities);
@@ -297,7 +326,7 @@ export default class State
             var sumProbability = 0.0;
             // iterate through the probabilities to figure out new degree
             for (var i = 0; i < probabilities.length; i++) {
-                sumProbability += probabilities[i];
+                sumProbability += this.lerp(equalProbabilities[i], probabilities[i], this.uInversion);
                 if (seed < sumProbability) { 
                     output.push(possibleNotes[i]);
                     probabilities[i] = 0.0; 

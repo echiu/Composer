@@ -8,7 +8,7 @@ var listener = new THREE.AudioListener();
 var audioLoader = new THREE.AudioLoader();
 
 var instruments = new Array();
-var instrumentNames = ['piano', 'clarinet', 'cello', 'french-horn'];
+var instrumentNames = ['piano', 'french-horn', 'clarinet', 'cello'];
 
 // index = 40 because instruments[X][40] is middle C
 var index = 40; 
@@ -17,9 +17,15 @@ var prevTime = Date.now();
 var direction = 1;
 
 // time interval between notes, in milliseconds
-var baseTimeInterval = 1000; // time for a whole note
+var baseTimeInterval = 2000; // time for a whole note
 var currTimeInterval = baseTimeInterval;
-var timeLerpU = 0.0; //interpolation between rhythm and pure random
+
+var startTime = Date.now();
+var periodTime = 900000.0; // 15 minutes
+// 300000.0; // 5 minutes
+// 60000.0; // 1 minute
+// 1200000.0 // 20 minutes
+//3600000.0; // one hour
 
 // see image of electronic keyboard to understand indexing:
 // https://images-na.ssl-images-amazon.com/images/I/81uw9BUrzTL._SL1500_.jpg
@@ -88,7 +94,21 @@ function onLoad(framework)
                 instruments[instrument][note] = new THREE.Audio(listener);
                 instruments[instrument][note].name = notes[note % 12] + (Math.floor(note / 12) + 1);
                 instruments[instrument][note].setBuffer( buffer );
-                instruments[instrument][note].setVolume(1.0);
+                // instruments[instrument][note].setVolume(1.0); DOESN'T WORK
+                // switch(instrumentNames[instrument])
+                // {
+                //   case 'piano':
+                //     instruments[instrument][note].setVolume(1.0);
+                //   case 'clarinet':
+                //     instruments[instrument][note].setVolume(0.0);
+                //   case 'cello':
+                //     instruments[instrument][note].setVolume(1.0);
+                //   case 'french-horn':
+                //     instruments[instrument][note].setVolume(1.2);
+                //   default:
+                //     instruments[instrument][note].setVolume(1.0);
+                // }
+                  
                 fileLoadCount++;
               });
 
@@ -109,6 +129,37 @@ function onUpdate(framework)
   // double check all piano sounds loaded
   if (Math.abs(prevTime - Date.now()) >= currTimeInterval && fileLoadCount >= length * instrumentNames.length)
   {
+
+    // for (var tit = startTime; tit < startTime + periodTime; tit = tit + periodTime/6)
+    // {
+      var lerpU = (Math.abs(Date.now() - startTime) % periodTime) / periodTime;
+      // (center - 3.0 * variance) to (center + 3.0 * variance) covers 99.7% of the distribution
+      var variance2 = (0.5 / 3.0) * (0.5 / 3.0);
+      var x2 = (lerpU - 0.5) * (lerpU - 0.5);
+      var gaussian = 1.0 * Math.pow(2.71828, -0.5 * x2 / variance2); // multiply by 1 because we want tallest part to be 1
+
+      var uInstrument = Math.min(Math.ceil(instrumentNames.length * gaussian), instrumentNames.length);
+      var uMinNotes = Math.min(Math.ceil(3 * gaussian), 3);
+      var uMaxNotes = Math.min(Math.ceil(6 * gaussian), 6);
+      var uProgression = gaussian;
+      var uInversion = gaussian;
+
+      // console.log("lerpU: " + lerpU);
+      // console.log("uInstrument: " + uInstrument);
+      // console.log("uMinNotes: " + uMinNotes);
+      // console.log("uMaxNotes: " + uMaxNotes);
+      // console.log("uInversion: " + uInversion);
+      // console.log("uProgression: " + uProgression);
+      // console.log(" ")
+    // }
+
+    state.minNotes = uMinNotes;
+    state.maxNotes = uMaxNotes;
+    state.uProgression = uProgression;
+    state.uInversion = uInversion;
+
+
+
     // get the number of notes to play for this onUpdate step
     var count = countQueue.shift();
 
@@ -116,7 +167,7 @@ function onUpdate(framework)
       {
         var noteIndex = notesQueue.shift();
         // play same note on all instruments, must be inner loop
-        for (var j = 0; j < instruments.length; j++)
+        for (var j = 0; j < uInstrument; j++)
         {
           // if the note is still playing, stop and play it again
           if (instruments[j][noteIndex].isPlaying) { instruments[j][noteIndex].stop(); }
@@ -124,14 +175,14 @@ function onUpdate(framework)
         }
       }
 
-    // if number of generated notes is less than 100, generate more notes
-    if (notesQueue.length < 100) { generateMelody(); }
+    // if number of generated notes is less than the max notes played at once, generate more notes
+    if (notesQueue.length < 6) { generateMelody(); }
 
     // update time interval
     prevTime = Date.now();
     var newTimeInterval = Math.pow(2.0, Math.round(Math.random() * -0.0)) * baseTimeInterval;
     var randomInterval = 0.125 * baseTimeInterval + (Math.random() * 0.875 * baseTimeInterval);
-    currTimeInterval = lerp(newTimeInterval, randomInterval, timeLerpU);
+    currTimeInterval = lerp(randomInterval, newTimeInterval, gaussian);
     // console.log(" ");
     // console.log("currTimeInterval " + currTimeInterval);
     // console.log(" ");
