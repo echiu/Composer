@@ -10,7 +10,7 @@ var audioLoader = new THREE.AudioLoader();
 var instruments = new Array();
 var instrumentNames = ['piano', 'clarinet', 'cello', 'french-horn'];
 
-// index = 40, in other words, instruments[X][40] is middle C
+// index = 40 because instruments[X][40] is middle C
 var index = 40; 
 var length = 84;
 var prevTime = Date.now();

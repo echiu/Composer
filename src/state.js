@@ -255,7 +255,7 @@ export default class State
         }
 
         // sort possible notes in numeric order
-        possibleNotes.sort(function(a,b){return a - b})
+        possibleNotes.sort(function(a,b){return a - b});
 
         // calculates the gaussian distribution weighting
         // one distribution has center of list as highest weight
@@ -307,7 +307,7 @@ export default class State
             countNotes++;
         }
 
-        output.sort(function(){return Math.random() - 0.5})
+        output.sort(function(){return Math.random() - 0.5});
         console.log("inversion " + output);
         return output;
     }
