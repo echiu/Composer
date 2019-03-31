@@ -21,8 +21,8 @@ var baseTimeInterval = 2000; // time for a whole note
 var currTimeInterval = baseTimeInterval;
 
 var startTime = Date.now();
-var periodTime = 900000.0; // 15 minutes
-// 300000.0; // 5 minutes
+var periodTime = 300000.0; // 5 minutes
+// 900000.0; // 15 minutes
 // 60000.0; // 1 minute
 // 1200000.0 // 20 minutes
 //3600000.0; // one hour
