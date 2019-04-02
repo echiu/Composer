@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project explores the obscure line between sound and music. Is there a clear distinction between consonance and dissonance? It involves programming music theory into code and using computers to procedurally generate a never-ending and constantly-changing piece. Music theory includes modes, progressions, modulations, inversions, arpeggios, instruments, rhythms, and dynamics. The software is programmed in Javascript, and uses a variety of computer science concepts. Modes are modeled with arrays, progressions are modeled with deterministic finite automatons, modulations are modeled with searching algorithms, and so forth.
+This project explores the obscure line between sound and music. Is there a clear distinction between consonance and dissonance? It involves programming music theory into code and using computers to procedurally generate a never-ending and constantly-changing piece. Music theory includes modes, progressions, modulations, inversions, and arpeggios. The software is programmed in Javascript, and uses a variety of computer science concepts. Modes are modeled with arrays, progressions are modeled with deterministic finite automatons, modulations are modeled with searching algorithms, and so forth.
 
 
 ## Modes
