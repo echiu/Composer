@@ -7,7 +7,7 @@ This project explores the obscure line between sound and music. Is there a clear
 
 ## Modes
 
-Modes is a technical term for different types of scales. The most commonly known scales are the Major and Minor scales. Major is actually slang for Dorian, and Minor is actually slang for Aeolian. In reality, a mode or scale is just a series of half steps and whole steps on the piano. Since you can only shift the series of half steps and whole steps seven times before ending up at the same scale again, there are seven different types of modes in music theory: Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, and Locrian. Each mode can be represented as an array of half steps (1) and whole steps (2) as shown below. The code can be even more succinct, having only one array and an offset value, but for code readability reasons, I chose to keep them separate.
+Modes is a technical term for different types of scales. The most commonly known scales are the Major and Minor scales. Major is actually a nickname for Ionian, and Minor is actually a nickname for Aeolian. In reality, a mode or scale is just a series of half steps and whole steps on the piano. Since you can only shift the series of half steps and whole steps seven times before ending up at the same scale again, there are seven different types of modes in music theory: Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, and Locrian. Each mode can be represented as an array of half steps (1) and whole steps (2) as shown below. The code can be even more succinct, having only one array and an offset value, but for code readability reasons, I chose to keep them separate.
 
 ![](./presentation/modes-1.png)
 
